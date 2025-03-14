@@ -178,6 +178,9 @@ class ResPartnerUpdateFromPadronWizard(models.TransientModel):
         for field in self.field_ids:
             if field.field in ('impuestos_padron', 'actividades_padron'):
                 vals[field.field] = [(6, False, literal_eval(field.new_value))]
+            #Odoo raises type error if you send a string for state_id, so i have to convert it to int
+            if field.field in ['state_id']:
+                self.partner_id.state_id=int(field.new_value)
             else:
                 vals[field.field] = field.new_value
         self.partner_id.write(vals)

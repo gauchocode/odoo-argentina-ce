@@ -46,17 +46,19 @@ class ResPartner(models.Model):
 
         # consultamos a5 ya que extiende a4 y tiene validez de constancia
         # padron = company.get_connection('ws_sr_padron_a4').connect()
-        padron = company.get_connection('ws_sr_padron_a5').connect()
+        padron = company.get_connection('ws_sr_constancia_inscripcion').connect()
         error_msg = _(
             'No pudimos actualizar desde padron afip al partner %s (%s).\n'
             'Recomendamos verificar manualmente en la página de AFIP.\n'
             'Obtuvimos este error: %s')
         try:
             padron.Consultar(cuit)
+            #raise UserError(str(padron.data) + str(padron.Persona))
         except SoapFault as e:
             raise UserError(error_msg % (self.name, cuit, e.faultstring))
         except Exception as e:
             raise UserError(error_msg % (self.name, cuit, e))
+
 
         if not padron.denominacion or padron.denominacion == ', ':
             raise UserError(error_msg % (
@@ -116,7 +118,9 @@ class ResPartner(models.Model):
             # If localidad cant be caba
             else:
                 state = self.env['res.country.state'].search([
-                    ('name', 'ilike', padron.provincia),
+                    #('name', 'ilike', padron.provincia),
+                    ('name', 'ilike', padron.data['domicilioFiscal']['descripcionProvincia']),
+
                     ('code', 'not in', caba_codes),
                     ('country_id.code', '=', 'AR')], limit=1)
             if state:
