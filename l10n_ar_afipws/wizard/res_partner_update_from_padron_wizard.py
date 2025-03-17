@@ -17,6 +17,41 @@ class ResPartnerUpdateFromPadronField(models.TransientModel):
     field = fields.Char("name")
     old_value = fields.Char("old Value")
     new_value = fields.Char("new Value")
+    new_value_display = fields.Char(string="New Value (Display)", compute="_compute_value_display")
+    old_value_display = fields.Char(string="Old Value (Display)", compute="_compute_value_display")
+
+    @api.depends('field', 'new_value', 'old_value')
+    def _compute_value_display(self):
+        for rec in self:
+            # Diccionario de modelos según el campo
+            model_map = {
+                'state_id': 'res.country.state',
+                'l10n_ar_afip_responsibility_type_id': 'l10n_ar.afip.responsibility.type',
+            }
+
+            # --- Procesar old_value ---
+            if rec.field in model_map:
+                try:
+                    # Buscar y mostrar el nombre para old_value
+                    record_old = self.env[model_map[rec.field]].browse(int(rec.old_value))
+                    rec.old_value_display = record_old.name if record_old.exists() else ''
+                except (ValueError, TypeError):
+                    rec.old_value_display = ''
+            else:
+                rec.old_value_display = rec.old_value  # Mostrar directamente si no es Many2one
+
+            # --- Procesar new_value ---
+            if rec.field in model_map:
+                try:
+                    # Buscar y mostrar el nombre para new_value
+                    record_new = self.env[model_map[rec.field]].browse(int(rec.new_value))
+                    rec.new_value_display = record_new.name if record_new.exists() else ''
+                except (ValueError, TypeError):
+                    rec.new_value_display = ''
+            else:
+                rec.new_value_display = rec.new_value  # Mostrar directamente si no es Many2one
+
+
 
 
 class ResPartnerUpdateFromPadronWizard(models.TransientModel):

@@ -34,8 +34,11 @@
                             <field name="field_ids" nolabel="1">
                                 <tree create="false" editable="top">
                                     <field name="field"/>
-                                    <field attrs="{'readonly':True}" name="old_value"/>
-                                    <field name="new_value"/>
+                                    <field name="new_value" invisible="1"/>
+                                    <field name="old_value" invisible="1"/>
+                                    <field attrs="{'readonly':True}" name="old_value_display"/>
+                                    <field name="new_value_display"/>
+
                                 </tree>
                             </field>
                         </span>
