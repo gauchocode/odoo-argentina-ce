@@ -53,16 +53,27 @@ class ResPartnerUpdateFromPadronWizard(models.TransientModel):
     @api.model
     def _get_domain(self):
         fields_names = [
-            "name",
-            "street",
-            "city",
-            "zip",
-            "l10n_ar_afip_responsibility_type_id",
-            "last_update_census",
+            'name',
+            'estado_padron',
+            'street',
+            'city',
+            'zip',
+            'actividades_padron',
+            'impuestos_padron',
+            'imp_iva_padron',
+            'state_id',
+            'imp_ganancias_padron',
+            'monotributo_padron',
+            'actividad_monotributo_padron',
+            'empleador_padron',
+            'integrante_soc_padron',
+            'last_update_padron',
+            'afip_responsability_type_id',
+            # 'constancia',
         ]
         return [
-            ("model", "=", "res.partner"),
-            ("name", "in", fields_names),
+            ('model', '=', 'res.partner'),
+            ('name', 'in', fields_names),
         ]
 
     @api.model
@@ -156,15 +167,44 @@ class ResPartnerUpdateFromPadronWizard(models.TransientModel):
                     lines.append((0, False, line_vals))
             self.field_ids = lines
 
+
+
     def _update(self):
         self.ensure_one()
         vals = {}
+
         for field in self.field_ids:
+            _logger.info(f"Procesando campo: {field.field} con valor: {field.new_value}")
+
             if field.field in ("impuestos_padron", "actividades_padron"):
-                vals[field.field] = [(6, False, literal_eval(field.new_value))]
+                # Many2many con comando (6, False, ids)
+                valores = [(6, False, literal_eval(field.new_value))]
+                vals[field.field] = valores
+                _logger.info(f"Asignando M2M {field.field}: {valores}")
+
+            elif field.field == 'state_id':
+                # Buscar el estado (provincia)
+                #Totalmente ineficiente pero funciona TODO:Arreglarlo
+                provincia = self.env['res.country.state'].browse(int(field.new_value))
+                if provincia.exists():
+                    vals['state_id'] = provincia.id  # Guardar ID en vals
+                    _logger.info(f"Provincia encontrada: {provincia.name} (ID: {provincia.id})")
+                else:
+                    _logger.warning(f"Provincia con ID {field.new_value} no encontrada.")
+
+            elif field.field == 'l10n_ar_afip_responsibility_type_id':
+                # Many2one simple
+                vals['l10n_ar_afip_responsibility_type_id'] = int(field.new_value)
+                _logger.info(f"Asignando responsabilidad AFIP: {field.new_value}")
+
             else:
+                # Otros campos simples
                 vals[field.field] = field.new_value
+                _logger.info(f"Asignando campo simple {field.field}: {field.new_value}")
+
+        _logger.info(f"Valores finales a escribir en partner {self.partner_id.id}: {vals}")
         self.partner_id.write(vals)
+
 
     def automatic_process_cb(self):
         for partner in self.partner_ids:

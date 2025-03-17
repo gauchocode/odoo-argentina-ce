@@ -23,64 +23,71 @@ class ResPartner(models.Model):
 
     # Separo esto para poder heredar de otros
     # modulos y extender los datos
-    def parce_census_vals(self, census):
+    def parse_census_vals(self, padron):
+        """
+        Procesa los datos del padrón AFIP y devuelve un diccionario
+        de valores para actualizar el res.partner.
+        """
 
-        # porque imp_iva activo puede ser S o AC
-        imp_iva = census.imp_iva
+        # Normalización del valor de IVA
+        imp_iva = padron.imp_iva
         if imp_iva == "S":
             imp_iva = "AC"
         elif imp_iva == "N":
-            # por ej. monotributista devuelve N
             imp_iva = "NI"
 
+        # Generación inicial de valores
         vals = {
-            "name": census.denominacion,
-            "street": census.direccion,
-            "city": census.localidad,
-            "zip": census.cod_postal,
+            "name": padron.denominacion,
+            # Descomentar estos si se necesitan como campos adicionales:
+            # 'name': padron.tipo_persona,
+            # 'name': padron.tipo_doc,
+            # 'name': padron.dni,
+            "estado_padron": padron.estado,
+            "street": padron.direccion,
+            "city": padron.localidad,
+            "zip": padron.cod_postal,
+            "actividades_padron": self.env["afip.activity"].search(
+                [("code", "in", padron.actividades)]
+            ).ids,
+            "impuestos_padron": self.env["afip.tax"].search(
+                [("code", "in", padron.impuestos)]
+            ).ids,
             "imp_iva_padron": imp_iva,
-            "last_update_census": fields.Date.today(),
+            # 'imp_ganancias_padron': padron.imp_ganancias,  # Aún no funcional
+            "monotributo_padron": padron.monotributo,
+            "actividad_monotributo_padron": padron.actividad_monotributo,
+            "empleador_padron": True if padron.empleador == "S" else False,
+            "integrante_soc_padron": padron.integrante_soc,
+            "last_update_padron": fields.Date.today(),
         }
 
-        # padron.idProvincia
-
-        ganancias_inscripto = [10, 11]
-        ganancias_exento = [12]
-        if set(ganancias_inscripto) & set(census.impuestos):
-            vals["imp_ganancias_padron"] = "AC"
-        elif set(ganancias_exento) & set(census.impuestos):
-            vals["imp_ganancias_padron"] = "EX"
-        elif census.monotributo == "S":
-            vals["imp_ganancias_padron"] = "NC"
-        else:
-            _logger.info(
-                "We couldn't get impuesto a las ganancias from padron, you"
-                "must set it manually"
-            )
-
-        if census.provincia:
-            # depending on the database, caba can have one of this codes
+        # --- Provincia y Estado ---
+        if padron.provincia:
             caba_codes = ["C", "CABA", "ABA"]
-            # if not localidad then it should be CABA.
-            if not census.localidad:
+            state = None
+
+            if not padron.localidad:
+                # Si no hay localidad, se asume CABA
                 state = self.env["res.country.state"].search(
-                    [("code", "in", caba_codes), ("country_id.code", "=", "AR")],
-                    limit=1,
+                    [("code", "in", caba_codes), ("country_id.code", "=", "AR")], limit=1
                 )
-            # If localidad cant be caba
             else:
+                # Búsqueda de la provincia fuera de CABA
                 state = self.env["res.country.state"].search(
                     [
-                        ("name", "ilike", census.provincia),
+                        ("name", "ilike", padron.data.get("domicilioFiscal", {}).get("descripcionProvincia", "")),
                         ("code", "not in", caba_codes),
                         ("country_id.code", "=", "AR"),
                     ],
                     limit=1,
                 )
+
             if state:
                 vals["state_id"] = state.id
 
-        if imp_iva == "NI" and census.monotributo == "S":
+        # --- Responsabilidad ante AFIP ---
+        if imp_iva == "NI" and padron.monotributo == "S":
             vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref(
                 "l10n_ar.res_RM"
             ).id
@@ -94,11 +101,25 @@ class ResPartner(models.Model):
             ).id
         else:
             _logger.info(
-                "We couldn't infer the AFIP responsability from padron, you"
-                "must set it manually."
+                "We couldn't infer the AFIP responsability from padron, you must set it manually."
             )
 
+        # --- Impuesto a las ganancias (comentado por ahora) ---
+        # ganancias_inscripto = [10, 11]
+        # ganancias_exento = [12]
+        # if set(ganancias_inscripto) & set(padron.impuestos):
+        #     vals["imp_ganancias_padron"] = "AC"
+        # elif set(ganancias_exento) & set(padron.impuestos):
+        #     vals["imp_ganancias_padron"] = "EX"
+        # elif padron.monotributo == "S":
+        #     vals["imp_ganancias_padron"] = "NC"
+        # else:
+        #     _logger.info(
+        #         "We couldn't get impuesto a las ganancias from padron, you must set it manually."
+        #     )
+
         return vals
+
 
     def get_data_from_padron_afip(self):
         self.ensure_one()
@@ -139,7 +160,7 @@ class ResPartner(models.Model):
 
         if not padron.denominacion or padron.denominacion == ", ":
             raise UserError(error_msg % (self.name, cuit, "La afip no devolvió nombre"))
-        vals = self.parce_census_vals(padron)
+        vals = self.parse_census_vals(padron)
         return vals
 
     def l10n_ar_afipws_fe_min_ammount(self):
