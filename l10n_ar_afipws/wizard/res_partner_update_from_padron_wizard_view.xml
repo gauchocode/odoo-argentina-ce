@@ -1,12 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <record id="action_base_partner_update_from_padron" model="ir.actions.act_window">
-        <field name="name">Update Partners From Padron AFIP</field>
-        <field name="res_model">res.partner.update.from.padron.wizard</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field>
-    </record>
-    <menuitem action="action_base_partner_update_from_padron" groups="base.group_system" id="menu_base_partner_update_from_padron" parent="contacts.res_partner_menu_config"/>
+<!--
+No me parece lo mejor pero funciona bien
+-->
+<record id="action_partner_update_from_padron_server" model="ir.actions.server">
+    <field name="name">Update From Padron</field>
+    <field name="model_id" ref="base.model_res_partner"/>
+    <field name="state">code</field>
+    <field name="binding_model_id" ref="base.model_res_partner"/>
+    <field name="binding_type">action</field>
+    <field name="binding_view_types">list</field>
+    <field name="usage">ir_actions_server</field>
+    <field name="code">
+partners = env.context.get("active_ids", [])
+action = {
+    "type": "ir.actions.act_window",
+    "name": "Update Partners From Padron AFIP",
+    "res_model": "res.partner.update.from.padron.wizard",
+    "view_mode": "form",
+    "target": "new",
+    "context": {"default_partner_ids": partners},
+}
+    </field>
+</record>
+
+
+
+
+
+
     <record id="view_base_partner_update_from_padron_form" model="ir.ui.view">
         <field name="name">res.partner.update.from.padron.wizard.form</field>
         <field name="model">res.partner.update.from.padron.wizard</field>
