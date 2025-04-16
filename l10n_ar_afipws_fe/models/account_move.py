@@ -79,7 +79,25 @@ class AccountMove(models.Model):
         '- SI: sí el comprobante asociado (original) se encuentra rechazado por el comprador\n'
         '- NO: sí el comprobante asociado (original) NO se encuentra rechazado por el comprador'
     )
+    l10n_ar_payment_foreign_currency = fields.Selection(
+        [("S", "Yes"), ("N", "No")],
+        compute="compute_l10n_ar_payment_foreign_currency",
+        store=True,
+        readonly=False
+    )
+    l10n_ar_currency_code = fields.Char("Currency Code", related="currency_id.name")
 
+    @api.onchange("currency_id", "line_ids")
+    @api.depends("currency_id")
+    def compute_l10n_ar_payment_foreign_currency(self):
+        self.l10n_ar_payment_foreign_currency = False
+        for move in self:
+            default_value = move.company_id.l10n_ar_payment_foreign_currency
+            if default_value == "account":
+                account = move.line_ids.account_id.filtered(lambda x: x.user_type_id.type == "receivable")
+                default_value = "S" if account.currency_id and account.currency_id != move.company_currency_id else "N"
+            move.l10n_ar_payment_foreign_currency = default_value
+            
     @api.depends('journal_id', 'afip_auth_code')
     def _compute_validation_type(self):
         for rec in self:
@@ -261,6 +279,8 @@ class AccountMove(models.Model):
             imp_op_ex = str("%.2f" % amounts['vat_exempt_base_amount'])
             moneda_id = inv.currency_id.l10n_ar_afip_code
             moneda_ctz = inv.l10n_ar_currency_rate
+            cancela_misma_moneda_ext=inv.l10n_ar_payment_foreign_currency
+            condicion_iva_receptor_id=inv.partner_id.l10n_ar_afip_responsibility_type_id.code
 
             CbteAsoc = inv.get_related_invoices_data()
 
@@ -272,7 +292,8 @@ class AccountMove(models.Model):
                     imp_iva,
                     imp_trib, imp_op_ex, fecha_cbte, fecha_venc_pago,
                     fecha_serv_desde, fecha_serv_hasta,
-                    moneda_id, moneda_ctz
+                    moneda_id, moneda_ctz, cancela_misma_moneda_ext,
+                    condicion_iva_receptor_id,
                 )
             # elif afip_ws == 'wsmtxca':
             #     obs_generales = inv.comment
@@ -354,6 +375,7 @@ class AccountMove(models.Model):
                     id_impositivo, moneda_id, moneda_ctz, obs_comerciales,
                     obs_generales, forma_pago, incoterms,
                     idioma_cbte, incoterms_ds, fecha_pago,
+                    cancela_misma_moneda_ext,condicion_iva_receptor_id
                 )
             elif afip_ws == 'wsbfe':
                 zona = 1  # Nacional (la unica devuelta por afip)
@@ -371,7 +393,8 @@ class AccountMove(models.Model):
                     cbte_nro, fecha_cbte, imp_total, imp_neto, imp_iva,
                     imp_tot_conc, impto_liq_rni, imp_op_ex, imp_perc, imp_iibb,
                     imp_perc_mun, imp_internos, moneda_id, moneda_ctz,
-                    fecha_venc_pago
+                    fecha_venc_pago,cancela_misma_moneda_ext,
+                    condicion_iva_receptor_id
                 )
 
             if afip_ws in ['wsfe', 'wsbfe']:
@@ -567,3 +590,20 @@ class AccountMove(models.Model):
             # solicitar. Lo mismo podriamos usar para grabar los mensajes de
             # afip de respuesta
             inv._cr.commit()
+
+
+
+    def pyafipws_get_currency_rate(self, ws):
+        self.ensure_one()
+        afip_ws = self.journal_id.afip_ws
+        if not afip_ws:
+            return
+        if hasattr(self, "%s_pyafipws_get_currency_rate" % afip_ws):
+            return getattr(self, "%s_pyafipws_get_currency_rate" % afip_ws)(
+                ws
+            )
+        else:
+            return _("AFIP WS %s not implemented") % afip_ws
+
+    def pyafipws_get_currency_rate(self, ws):
+        return ws.ParamGetCotizacion(self.currency_id.l10n_ar_afip_code)

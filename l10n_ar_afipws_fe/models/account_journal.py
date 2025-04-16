@@ -196,8 +196,3 @@ class AccountJournal(models.Model):
             raise UserError(_('No AFIP WS selected'))
         self.company_id.get_connection(afip_ws).connect()
 
-    def get_pyafipws_currency_rate(self, currency):
-        raise UserError(currency.get_pyafipws_currency_rate(
-            afip_ws=self.afip_ws,
-            company=self.company_id,
-        )[1])
