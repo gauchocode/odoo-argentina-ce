@@ -63,6 +63,8 @@ class ResPartner(models.Model):
         }
 
         # --- Provincia y Estado ---
+        _logger.info("provincia: %s", padron.provincia)
+        _logger.info(padron.data)
         if padron.provincia:
             caba_codes = ["C", "CABA", "ABA"]
             state = None
@@ -73,10 +75,31 @@ class ResPartner(models.Model):
                     [("code", "in", caba_codes), ("country_id.code", "=", "AR")], limit=1
                 )
             else:
-                # Búsqueda de la provincia fuera de CABA
+                # Provincia enviada por AFIP (puede venir sin acentos)
+                provincia_afip = padron.data.get("domicilioFiscal", {}).get("descripcionProvincia", "").strip()
+
+                # Provincias que necesitan corrección de acento
+                # Persona del futuro, te preguntaras porque esta bestialidad?
+                # La respuesta es simple, las provincias estan guardadas con tilde en odoo
+                # Pero afip en su divina sabiduria las devuelve sin tilde
+
+                if provincia_afip == "CORDOBA":
+                    provincia_afip = "Córdoba"
+                elif provincia_afip == "ENTRE RIOS":
+                    provincia_afip = "Entre Ríos"
+                elif provincia_afip == "NEUQUEN":
+                    provincia_afip = "Neuquén"
+                elif provincia_afip == "RIO NEGRO":
+                    provincia_afip = "Río Negro"
+                elif provincia_afip == "TUCUMAN":
+                    provincia_afip = "Tucumán"
+
+                _logger.info("provincia_afip: %s", provincia_afip)
+
+                # Búsqueda en Odoo con el nombre corregido
                 state = self.env["res.country.state"].search(
                     [
-                        ("name", "ilike", padron.data.get("domicilioFiscal", {}).get("descripcionProvincia", "")),
+                        ("name", "ilike", provincia_afip),
                         ("code", "not in", caba_codes),
                         ("country_id.code", "=", "AR"),
                     ],
@@ -86,19 +109,24 @@ class ResPartner(models.Model):
             if state:
                 vals["state_id"] = state.id
 
+
+        _logger.info("impuesto y monotributo: %s , %s", imp_iva, padron.monotributo)
         # --- Responsabilidad ante AFIP ---
         if imp_iva == "NI" and padron.monotributo == "S":
-            vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref(
-                "l10n_ar.res_RM"
-            ).id
+            # Responsable Monotributo
+            vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref("l10n_ar.res_RM").id
+
+        elif imp_iva == "NI" and padron.monotributo == "N":
+            # Consumidor Final
+            vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref("l10n_ar.res_CF").id
+
         elif imp_iva == "AC":
-            vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref(
-                "l10n_ar.res_IVARI"
-            ).id
+            # Responsable Inscripto
+            vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref("l10n_ar.res_IVARI").id
+
         elif imp_iva == "EX":
-            vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref(
-                "l10n_ar.res_IVAE"
-            ).id
+            # Exento
+            vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref("l10n_ar.res_IVAE").id
         else:
             _logger.info(
                 "We couldn't infer the AFIP responsability from padron, you must set it manually."
