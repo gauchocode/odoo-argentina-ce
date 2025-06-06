@@ -6,6 +6,7 @@
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 import logging
+import html
 
 _logger = logging.getLogger(__name__)
 
@@ -21,6 +22,16 @@ class ResPartner(models.Model):
     )
     last_update_census = fields.Date(string="Last update census")
 
+
+    def unescape_dict(self, data):
+        if isinstance(data, dict):
+            return {k: self.unescape_dict(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self.unescape_dict(v) for v in data]
+        elif isinstance(data, str):
+            return html.unescape(data)
+        else:
+            return data
     # Separo esto para poder heredar de otros
     # modulos y extender los datos
     def parse_census_vals(self, padron):
@@ -28,6 +39,10 @@ class ResPartner(models.Model):
         Procesa los datos del padrón AFIP y devuelve un diccionario
         de valores para actualizar el res.partner.
         """
+        for attr, value in padron.__dict__.items():
+            if isinstance(value, (dict, list, str)):
+                setattr(padron, attr, self.unescape_dict(value))
+
 
         # Normalización del valor de IVA
         imp_iva = padron.imp_iva
@@ -63,8 +78,10 @@ class ResPartner(models.Model):
         }
 
         # --- Provincia y Estado ---
-        _logger.info("provincia: %s", padron.provincia)
+        _logger.debug("provincia: %s", padron.provincia)
         _logger.info(padron.data)
+
+        
         if padron.provincia:
             caba_codes = ["C", "CABA", "ABA"]
             state = None
