@@ -144,6 +144,11 @@ class ResPartner(models.Model):
         elif imp_iva == "EX":
             # Exento
             vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref("l10n_ar.res_IVAE").id
+        
+        elif imp_iva == "NA":
+            # Exento
+            vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref("l10n_ar.res_IVA_NO_ALC").id
+            
         else:
             _logger.info(
                 "We couldn't infer the AFIP responsability from padron, you must set it manually."

@@ -370,12 +370,12 @@ msgstr "Tiempo de expiración"
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_res_partner_update_from_padron_wizard__field_ids
 msgid "Fields"
-msgstr ""
+msgstr "Campos"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_res_partner_update_from_padron_wizard__field_to_update_ids
 msgid "Fields To Update"
-msgstr ""
+msgstr "Campos a Actualizar"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_afipws_certificate__request_filename
@@ -396,13 +396,13 @@ msgstr "Tiempo de generación"
 #: code:addons/l10n_ar_afipws/models/afipws_connection.py:0
 #, python-format
 msgid "Go and find data manually"
-msgstr ""
+msgstr "Vaya a buscar la informacion Manualmente"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields.selection,name:l10n_ar_afipws.selection__afipws_certificate_alias__type__homologation
 #: model:ir.model.fields.selection,name:l10n_ar_afipws.selection__afipws_connection__type__homologation
 msgid "Homologation"
-msgstr ""
+msgstr "Homologacion"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_afipws_certificate__id
@@ -445,6 +445,8 @@ msgid ""
 "It seems like AFIP service is not available.\n"
 "Please try again later or try manually"
 msgstr ""
+"Parece que el servicio de AFIP no esta Disponible.\n"
+"Por favor intente mas tarde o manualmente"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,help:l10n_ar_afipws.field_afipws_certificate_alias__common_name
@@ -490,17 +492,17 @@ msgstr "Última actualización en"
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_res_partner__last_update_census
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_res_users__last_update_census
 msgid "Last update census"
-msgstr ""
+msgstr "Ultima actualizacion de padron"
 
 #. module: l10n_ar_afipws
 #: model_terms:ir.ui.view,arch_db:l10n_ar_afipws.res_config_settings_view_form
 msgid "List certificates"
-msgstr ""
+msgstr "Listar Certificados"
 
 #. module: l10n_ar_afipws
 #: model_terms:ir.ui.view,arch_db:l10n_ar_afipws.res_config_settings_view_form
 msgid "List conections"
-msgstr ""
+msgstr "Listar Conexiones"
 
 #. module: l10n_ar_afipws
 #: model_terms:ir.ui.view,arch_db:l10n_ar_afipws.mipymepartner_form
@@ -538,7 +540,7 @@ msgstr "Certificado no confirmado para %s en la compañía %s"
 #: code:addons/l10n_ar_afipws/models/res_partner.py:0
 #, python-format
 msgid "Not confirmed certificate found on database"
-msgstr ""
+msgstr "No hay un certificado confirmado en la base de datos"
 
 #. module: l10n_ar_afipws
 #: model_terms:ir.ui.view,arch_db:l10n_ar_afipws.view_base_partner_update_from_padron_form
@@ -547,16 +549,19 @@ msgid ""
 "                        <br/>\n"
 "                        Select the list of fields you want to update."
 msgstr ""
+"Solo Contactos con Cuit van a ser Actualizados.\n"
+"                        <br/>\n"
+"                        Selecciona la lista de Campos a Actualizar."
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,help:l10n_ar_afipws.field_res_partner_update_from_padron_wizard__field_to_update_ids
 msgid "Only this fields are going to be retrived and updated"
-msgstr ""
+msgstr "Solo estos campos van a ser actualizados"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields.selection,name:l10n_ar_afipws.selection__res_partner_update_from_padron_wizard__state__option
 msgid "Option"
-msgstr ""
+msgstr "Opcion"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields.selection,name:l10n_ar_afipws.selection__afipws_certificate_alias__service_type__outsourced
@@ -571,7 +576,7 @@ msgstr "Empresa"
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_res_partner_update_from_padron_wizard__partner_ids
 msgid "Partners"
-msgstr ""
+msgstr "Contactos"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_afipws_certificate_alias__key
@@ -637,7 +642,7 @@ msgstr "Firma"
 #. module: l10n_ar_afipws
 #: model_terms:ir.ui.view,arch_db:l10n_ar_afipws.view_base_partner_update_from_padron_form
 msgid "Skip these partner"
-msgstr ""
+msgstr "Saltear este Contacto"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_afipws_certificate__state
@@ -720,33 +725,33 @@ msgstr ""
 #. module: l10n_ar_afipws
 #: model_terms:ir.ui.view,arch_db:l10n_ar_afipws.view_base_partner_update_from_padron_form
 msgid "Update Automatically"
-msgstr ""
+msgstr "Actualizar Automaticamente"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_res_partner_update_from_padron_wizard__update_constancia
 msgid "Update Constancia"
-msgstr ""
+msgstr "Actualizar Constancia"
 
 #. module: l10n_ar_afipws
 #: model_terms:ir.ui.view,arch_db:l10n_ar_afipws.view_base_partner_update_from_padron_form
 msgid "Update From Padron AFIP"
-msgstr ""
+msgstr "Actualizar desde Padron AFIP"
 
 #. module: l10n_ar_afipws
 #: model:ir.actions.act_window,name:l10n_ar_afipws.action_base_partner_update_from_padron
 #: model:ir.ui.menu,name:l10n_ar_afipws.menu_base_partner_update_from_padron
 msgid "Update Partners From Padron AFIP"
-msgstr ""
+msgstr "Actualizar Contactos desde el Padron AFIP"
 
 #. module: l10n_ar_afipws
 #: model_terms:ir.ui.view,arch_db:l10n_ar_afipws.view_base_partner_update_from_padron_form
 msgid "Update Selection"
-msgstr ""
+msgstr "Actualizar Seleccion"
 
 #. module: l10n_ar_afipws
 #: model_terms:ir.ui.view,arch_db:l10n_ar_afipws.view_base_partner_update_from_padron_form
 msgid "Update with Manual Check"
-msgstr ""
+msgstr "Actualizar con Checkeo Manual"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_afipws_upload_certificate_wizard__certificate_file
@@ -794,17 +799,17 @@ msgstr ""
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_res_partner_update_from_padron_field__field
 msgid "name"
-msgstr ""
+msgstr "Campo"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_res_partner_update_from_padron_field__new_value
 msgid "new Value"
-msgstr ""
+msgstr "Nuevo Valor"
 
 #. module: l10n_ar_afipws
 #: model:ir.model.fields,field_description:l10n_ar_afipws.field_res_partner_update_from_padron_field__old_value
 msgid "old Value"
-msgstr ""
+msgstr "Viejo Valor"
 
 #. module: l10n_ar_afipws
 #: model_terms:ir.ui.view,arch_db:l10n_ar_afipws.view_base_partner_update_from_padron_form
@@ -815,4 +820,4 @@ msgstr "o"
 #. module: l10n_ar_afipws
 #: model:ir.model.fields.selection,name:l10n_ar_afipws.selection__res_config_settings__afip_ws_env_type__production
 msgid "production"
-msgstr ""
+msgstr "Produccion"
