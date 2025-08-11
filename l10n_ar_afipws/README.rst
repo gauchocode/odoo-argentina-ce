@@ -34,6 +34,7 @@ Incluye:
 
 * Wizard para instalar los claves para acceder a las Web Services.
 * API para realizar consultas en la Web Services desde OpenERP.
+* CRON para actualizar periodicamente los contactos
 
 El módulo l10n_ar_afipws permite a OpenERP acceder a los servicios del AFIP a
 travésde Web Services. Este módulo es un servicio para administradores y

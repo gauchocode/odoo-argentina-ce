@@ -58,6 +58,7 @@ class ResPartnerUpdateFromPadronWizard(models.TransientModel):
     _name = "res.partner.update.from.padron.wizard"
     _description = "AFIP A5 Census Wizard"
 
+
     @api.model
     def get_partners(self):
         # TODO deberiamos buscar de otro manera estos partners
@@ -243,11 +244,16 @@ class ResPartnerUpdateFromPadronWizard(models.TransientModel):
 
 
     def automatic_process_cb(self):
+        errores = []
         for partner in self.partner_ids:
             self.partner_id = partner.id
+            # Utilizá la versión que no lanza excepción, sino que la devuelve como texto:
+            vals, error = partner.get_data_from_padron_afip_safe()
+            if error:
+                errores.append(f"{partner.display_name or partner.name} ({partner.vat}): {error}")
+                continue
             self.change_partner()
             self._update()
-
         self.write({"state": "finished"})
         return {
             "type": "ir.actions.act_window",
@@ -256,6 +262,7 @@ class ResPartnerUpdateFromPadronWizard(models.TransientModel):
             "view_mode": "form",
             "target": "new",
         }
+
 
     def update_selection(self):
         self.ensure_one()

@@ -7,6 +7,7 @@ from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 import logging
 import html
+from datetime import timedelta
 
 _logger = logging.getLogger(__name__)
 
@@ -79,7 +80,7 @@ class ResPartner(models.Model):
 
         # --- Provincia y Estado ---
         _logger.debug("provincia: %s", padron.provincia)
-        _logger.info(padron.data)
+        _logger.debug(padron.data)
 
         
         if padron.provincia:
@@ -111,7 +112,7 @@ class ResPartner(models.Model):
                 elif provincia_afip == "TUCUMAN":
                     provincia_afip = "Tucumán"
 
-                _logger.info("provincia_afip: %s", provincia_afip)
+                _logger.debug("provincia_afip: %s", provincia_afip)
 
                 # Búsqueda en Odoo con el nombre corregido
                 state = self.env["res.country.state"].search(
@@ -127,7 +128,7 @@ class ResPartner(models.Model):
                 vals["state_id"] = state.id
 
 
-        _logger.info("impuesto y monotributo: %s , %s", imp_iva, padron.monotributo)
+        _logger.debug("impuesto y monotributo: %s , %s", imp_iva, padron.monotributo)
         # --- Responsabilidad ante AFIP ---
         if imp_iva == "NI" and padron.monotributo == "S":
             # Responsable Monotributo
@@ -150,7 +151,7 @@ class ResPartner(models.Model):
             vals["l10n_ar_afip_responsibility_type_id"] = self.env.ref("l10n_ar.res_IVA_NO_ALC").id
             
         else:
-            _logger.info(
+            _logger.debug(
                 "We couldn't infer the AFIP responsability from padron, you must set it manually."
             )
 
@@ -220,3 +221,39 @@ class ResPartner(models.Model):
                 res = ws.ConsultarMontoObligadoRecepcion(record.l10n_ar_vat)
                 record.mipyme_required = True if ws.Resultado == "S" else False
                 record.mipyme_from_amount = float(res)
+
+    def get_data_from_padron_afip_safe(self):
+        """Devuelve (vals, error_msg) para uso batch seguro."""
+        try:
+            vals = self.get_data_from_padron_afip()
+            return vals, None
+        except Exception as e:
+            _logger.error(f"Error AFIP partner {self.name} ({self.vat}): {str(e)}")
+            return None, str(e)
+
+    @api.model
+    def cron_update_partners_from_padron(self, batch_size=100, days=7):
+        date_limit = (fields.Date.context_today(self) - timedelta(days=days))
+        domain = [
+            ('is_company', '=', True),
+            ('user_id', '=', False),
+            ('vat', '!=', False),
+            ('l10n_latam_identification_type_id.l10n_ar_afip_code', '=', 80),
+            '|',
+                ('last_update_padron', '=', False),
+                ('last_update_padron', '<', date_limit),
+        ]
+        partners = self.search(domain, order='id', limit=batch_size)
+        _logger.info(f"CRON AFIP: Procesando {len(partners)} partners (lote={batch_size}, días={days})")
+        for partner in partners:
+            vals, error = partner.get_data_from_padron_afip_safe()
+            if error:
+                _logger.warning(f"Error actualizando {partner.display_name or partner.name}: {error}")
+                continue
+            try:
+                partner.write(vals)
+            except Exception as e:
+                _logger.error(f"Error escribiendo datos en {partner.display_name or partner.name}: {e}")
+                self.env.cr.rollback()
+        return True
+
