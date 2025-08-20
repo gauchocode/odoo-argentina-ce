@@ -44,9 +44,11 @@ class AccountVatLedgerXlsx(models.AbstractModel):
 
             for i, title in enumerate(titles):
                 sheet.write(3, i, title, bold)
+
             row = 4
             index = 0
             sheet.set_column("A:F", 30)
+
             for i, obj in enumerate(vat_ledger.invoice_ids):
                 sheet.write(row + index, 0, obj.invoice_date.strftime("%Y-%m-%d"))
                 sheet.write(row + index, 1, obj.partner_name)
@@ -68,5 +70,31 @@ class AccountVatLedgerXlsx(models.AbstractModel):
                 sheet.write(row + index, 17, obj.vat_per, money_format)
                 sheet.write(row + index, 18, obj.other_taxes, money_format)
                 sheet.write(row + index, 19, obj.total, money_format)
-
                 index += 1
+
+                    # === SUMATORIAS ===
+            total_row = row + index  # fila donde escribimos las sumas
+            sheet.write(total_row, 5, "Totales", bold)
+
+            # Inicializar acumuladores para cada columna numérica
+            totals = {col: 0 for col in range(6, 20)}
+
+            for obj in vat_ledger.invoice_ids:
+                totals[6] += obj.not_taxed or 0
+                totals[7] += obj.base_25 or 0
+                totals[8] += obj.vat_25 or 0
+                totals[9] += obj.base_5 or 0
+                totals[10] += obj.vat_5 or 0
+                totals[11] += obj.base_10 or 0
+                totals[12] += obj.vat_10 or 0
+                totals[13] += obj.base_21 or 0
+                totals[14] += obj.vat_21 or 0
+                totals[15] += obj.base_27 or 0
+                totals[16] += obj.vat_27 or 0
+                totals[17] += obj.vat_per or 0
+                totals[18] += obj.other_taxes or 0
+                totals[19] += obj.total or 0
+
+            # Escribir los totales en la fila final
+            for col, value in totals.items():
+                sheet.write(total_row, col, value, money_format)
