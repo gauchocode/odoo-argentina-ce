@@ -1,9 +1,9 @@
 {
     "name": "Argentinian Reports (CE)",
-    "version": "16.0.1.0.0",
+    "version": "16.0.1.0.1",
     "category": "Localization/Argentina",
     "sequence": 14,
-    "author": "ADHOC SA,Moldeo Interactive,Odoo Community Association (OCA)",
+    "author": "ADHOC SA,Moldeo Interactive,Odoo Community Association (OCA),GauchoCode",
     "license": "AGPL-3",
     "summary": "",
     "depends": [
