@@ -6,6 +6,8 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 import base64
 import re
+import logging
+_logger = logging.getLogger(__name__)
 
 
 class AccountVatLedger(models.Model):
@@ -75,7 +77,7 @@ class AccountVatLedger(models.Model):
     )
     note = fields.Html("Notes")
     # Computed fields
-    name = fields.Char("Titile", compute="_compute_name")
+    name = fields.Char("Title", compute="_compute_name")
     reference = fields.Char(
         "Reference",
     )
@@ -143,33 +145,61 @@ class AccountVatLedger(models.Model):
                 ]
             )
 
-    @api.depends(
-        "type",
-        "reference",
-    )
+    @api.depends("type", "reference", "date_from", "date_to")
+    @api.depends_context("lang")
     def _compute_name(self):
-        date_format = (
-            self.env["res.lang"]
-            ._lang_get(self._context.get("lang", "en_US"))
-            .date_format
+        """
+        Purpose:
+            Compute the display name of the VAT ledger using Spanish fixed labels,
+            independent of Odoo's translation system.
+
+        Needs:
+            - Fields: type ('sale'|'purchase'), reference (char), date_from (date), date_to (date).
+            - res.lang records available to read 'date_format' for the active language.
+
+        Assumptions:
+            - If no language is present in context, fallback to the user's language, then
+            the company's partner language, and finally 'en_US'.
+            - Dates may be empty; in that case, blanks are used.
+            - Labels are hardcoded in Spanish on purpose (no _() translation lookup).
+        """
+        lang_code = (
+            self._context.get("lang")
+            or self.env.user.lang
+            or self.env.company.partner_id.lang
+            or "en_US"
         )
+        _logger.info("Lang code for VAT Ledger name: %s", lang_code)
+
+        date_format = self.env["res.lang"]._lang_get(lang_code).date_format
+
         for rec in self:
+            # Etiqueta del libro según el tipo (en español, sin usar _())
             if rec.type == "sale":
-                ledger_type = _("Sales")
+                ledger_type = "Ventas"
             elif rec.type == "purchase":
-                ledger_type = _("Purchases")
-            name = _("%s VAT Ledger %s - %s") % (
-                ledger_type,
-                rec.date_from
-                and fields.Date.from_string(rec.date_from).strftime(date_format)
-                or "",
-                rec.date_to
-                and fields.Date.from_string(rec.date_to).strftime(date_format)
-                or "",
+                ledger_type = "Compras"
+            else:
+                ledger_type = ""
+
+            # Formato fijo en español: "%s Libro IVA %s - %s"
+            # Usamos to_date para garantizar objeto date y strftime con el formato del idioma activo.
+            date_from_str = (
+                fields.Date.to_date(rec.date_from).strftime(date_format)
+                if rec.date_from else ""
             )
+            date_to_str = (
+                fields.Date.to_date(rec.date_to).strftime(date_format)
+                if rec.date_to else ""
+            )
+
+            name = "Libro IVA %s %s - %s" % (ledger_type, date_from_str, date_to_str)
+
             if rec.reference:
                 name = "%s - %s" % (name, rec.reference)
+
             rec.name = name
+
 
     @api.onchange("company_id")
     def change_company(self):
