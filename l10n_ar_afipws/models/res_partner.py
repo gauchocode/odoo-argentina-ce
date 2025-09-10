@@ -244,16 +244,31 @@ class ResPartner(models.Model):
                 ('last_update_padron', '<', date_limit),
         ]
         partners = self.search(domain, order='id', limit=batch_size)
+
+        # === NUEVO: leemos el parámetro igual que el wizard ===
+        use_title = self.env["ir.config_parameter"].sudo().get_param(
+            "use_title_case_on_padron_afip"
+        )
+        use_title = False if use_title in ("False", "0") else True
+
         _logger.info(f"CRON AFIP: Procesando {len(partners)} partners (lote={batch_size}, días={days})")
         for partner in partners:
             vals, error = partner.get_data_from_padron_afip_safe()
             if error:
                 _logger.warning(f"Error actualizando {partner.display_name or partner.name}: {error}")
                 continue
+
+            # === NUEVO: normalizamos como el wizard ===
+            if use_title:
+                for k in ("name", "city", "street"):
+                    if vals.get(k):
+                        vals[k] = vals[k].title()
+
             try:
                 partner.write(vals)
             except Exception as e:
                 _logger.error(f"Error escribiendo datos en {partner.display_name or partner.name}: {e}")
                 self.env.cr.rollback()
         return True
+
 
