@@ -1,9 +1,9 @@
 {
     "name": "Factura Electrónica Argentina",
-    'version': '13.0.1.2.1',
+    'version': '13.0.2.0.1',
     'category': 'Localization/Argentina',
     'sequence': 14,
-    'author': 'ADHOC SA, Moldeo Interactive,Odoo Community Association (OCA)',
+    'author': 'ADHOC SA, Moldeo Interactive,Odoo Community Association (OCA),Gauchocode',
     'license': 'AGPL-3',
     'summary': '',
     'depends': [
