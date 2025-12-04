@@ -18,6 +18,26 @@
                 CAE Due Date: <span t-field="o.afip_auth_code_due"/>
             </div>
         </div>
+        <xpath expr="//div[@id='total']/div/table" position="after">
+            <t t-if="o.l10n_latam_document_type_id.l10n_ar_letter == 'B' and o.amount_tax">
+                <table class="table table-sm table-bordered mt8" style="page-break-inside: avoid;">
+                    <tr>
+                        <th class="text-center" colspan="2">
+                            Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)
+                        </th>
+                    </tr>
+                    <tr>
+                        <td class="text-right">
+                            <strong>IVA Contenido $</strong>
+                        </td>
+                        <td class="text-right">
+                            <span t-field="o.amount_tax"
+                                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                        </td>
+                    </tr>
+                </table>
+            </t>
+        </xpath>
     </template>
 
     <template id="report_invoice_document_with_payments" inherit_id="l10n_ar.report_invoice_document_with_payments">
@@ -37,6 +57,26 @@
                 CAE Due Date: <span t-field="o.afip_auth_code_due"/>
             </div>
         </div>
+        <xpath expr="//div[@id='total']/div/table" position="after">
+            <t t-if="o.l10n_latam_document_type_id.l10n_ar_letter == 'B' and o.amount_tax">
+                <table class="table table-sm table-bordered mt8" style="page-break-inside: avoid;">
+                    <tr>
+                        <th class="text-center" colspan="2">
+                            Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)
+                        </th>
+                    </tr>
+                    <tr>
+                        <td class="text-right">
+                            <strong>IVA Contenido $</strong>
+                        </td>
+                        <td class="text-right">
+                            <span t-field="o.amount_tax"
+                                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                        </td>
+                    </tr>
+                </table>
+            </t>
+        </xpath>
     </template>
 
 
